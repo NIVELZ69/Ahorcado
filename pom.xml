@@ -11,10 +11,10 @@
   <url>http://maven.apache.org</url>
 
   <properties>
-	  <maven.compiler.target>22</maven.compiler.target>
-	  <maven.compier.source>22</maven.compier.source>
+	  <maven.compiler.target>21</maven.compiler.target>
+	  <maven.compier.source>21</maven.compier.source>
 	  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	  <exec.mainClass>dad.Ahorcado.Main</exec.mainClass>
+	  <exec.mainClass>dad.ahorcado.Ahorcado.Main</exec.mainClass>
 	  
   </properties>
 
