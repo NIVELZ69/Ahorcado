@@ -1,5 +1,9 @@
 package dad.ahorcado.Ahorcado;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Random;
@@ -44,7 +48,7 @@ public class RootController implements Initializable {
 	@FXML
 	private ListView<String> listaPalabras;
 
-	private ObservableList<String> palabrasList = FXCollections.observableArrayList();
+	public ObservableList<String> palabrasList = FXCollections.observableArrayList();
 	private ObservableList<String> puntuacionesList = FXCollections.observableArrayList();
 
 	@FXML
@@ -64,7 +68,7 @@ public class RootController implements Initializable {
 
 	@FXML
 	private TabPane root;
-	
+
 	String adivinar;
 	private DoubleProperty puntos = new SimpleDoubleProperty(0);
 
@@ -86,76 +90,132 @@ public class RootController implements Initializable {
 		puntos.addListener((Observable, oldValue, newValue) -> actualizarImagen(newValue.intValue()));
 		listaPuntuaciones.setItems(puntuacionesList);
 
-		
 		puntos.set(100);
 		adivinar = elegirYMostrarPalabraOculta();
 	}
-	
+
 	private String elegirYMostrarPalabraOculta() {
-	    if (palabrasList.size() > 0) {
-	        int randomIndex = new Random().nextInt(palabrasList.size());
-	        String palabra = palabrasList.get(randomIndex);
+		if (palabrasList.size() > 0) {
+			int randomIndex = new Random().nextInt(palabrasList.size());
+			String palabra = palabrasList.get(randomIndex);
 
-	        // Crea la versión oculta de la palabra
-	        StringBuilder palabraOculta = new StringBuilder();
-	        for (char c : palabra.toCharArray()) {
-	            palabraOculta.append(c == ' ' ? ' ' : '_');
-	        }
+			// Crea la versión oculta de la palabra
+			StringBuilder palabraOculta = new StringBuilder();
+			for (char c : palabra.toCharArray()) {
+				palabraOculta.append(c == ' ' ? ' ' : '_');
+			}
 
-	        // Asigna el texto oculto al label
-	        palabraLabel.setText(palabraOculta.toString());
-	        
-	        
-	        puntos.set(100);
-	        resolverButton.setText("Resolver");
-	        
-	        return palabra;
-	    } else {
-	        palabraLabel.setText("Añade una palabra a la lista.");
-	        resolverButton.setText("Jugar");
-	        return null;
-	    }
+			// Asigna el texto oculto al label
+			palabraLabel.setText(palabraOculta.toString());
+
+			puntos.set(100);
+			resolverButton.setText("Resolver");
+
+			return palabra;
+		} else {
+			palabraLabel.setText("Añade una palabra a la lista.");
+			resolverButton.setText("Jugar");
+			return null;
+		}
 	}
-	
+
 	private void actualizarImagen(double puntosActuales) {
 		String imagePath;
-		
-		if (puntosActuales == 100) {
-            imagePath = "/images/1.png";
-		} else if (puntosActuales > 87.5) {
-            imagePath = "/images/2.png";
-		} else if (puntosActuales > 75) {
-            imagePath = "/images/3.png";
-		} else if (puntosActuales > 62.5) {
-            imagePath = "/images/4.png";
-		} else if (puntosActuales > 50) {
-            imagePath = "/images/5.png";
-        } else if (puntosActuales > 37.5) {
-            imagePath = "/images/6.png";
-        } else if (puntosActuales > 25) {
-            imagePath = "/images/7.png";
-        } else if (puntosActuales > 12.5) {
-            imagePath = "/images/8.png";
-        } else {
-            imagePath = "/images/9.png";
-        }
 
-        ahorcadoImageView.setImage(new Image(getClass().getResourceAsStream(imagePath)));
-    }
-	
+		if (puntosActuales == 100) {
+			imagePath = "/images/1.png";
+		} else if (puntosActuales > 87.5) {
+			imagePath = "/images/2.png";
+		} else if (puntosActuales > 75) {
+			imagePath = "/images/3.png";
+		} else if (puntosActuales > 62.5) {
+			imagePath = "/images/4.png";
+		} else if (puntosActuales > 50) {
+			imagePath = "/images/5.png";
+		} else if (puntosActuales > 37.5) {
+			imagePath = "/images/6.png";
+		} else if (puntosActuales > 25) {
+			imagePath = "/images/7.png";
+		} else if (puntosActuales > 12.5) {
+			imagePath = "/images/8.png";
+		} else {
+			imagePath = "/images/9.png";
+		}
+
+		ahorcadoImageView.setImage(new Image(getClass().getResourceAsStream(imagePath)));
+	}
+
 	private void añadirPuntuacion(DoubleProperty puntos, boolean ganado) {
-		
-		if(ganado == true) {
+
+		if (ganado == true) {
 			puntuacionesList.add("Partida ganada, puntos: " + puntos.get() + " (" + adivinar + ")");
 		} else {
-			puntuacionesList.add("Partida perdida." + " (" + adivinar + ")" );
+			puntuacionesList.add("Partida perdida." + " (" + adivinar + ")");
 		}
 		
-	}
-	
-	private void escribirFichero() {
 		
+
 	}
+
+	public void escribirPalabraFichero() {
+	    try (BufferedWriter writer = new BufferedWriter(new FileWriter("palabras.txt", false))) { // false para sobrescribir
+	        for (String palabra : palabrasList) {
+	            writer.write(palabra);
+	            writer.newLine();
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	}
+
+	private void escribirPuntajeFichero(boolean ganado, double puntos) {
+
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter("puntuaciones.csv", true))) {
+			if (ganado == true) {
+				writer.write(ganado + "," + puntos);
+				writer.newLine();
+			} else {
+				writer.write(ganado + ",");
+				writer.newLine();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+
+		}
+	}
+
+	public void leerPalabraFichero() {
+
+		try (BufferedReader reader = new BufferedReader(new FileReader("palabras.txt"))) {
+			String palabra;
+			while ((palabra = reader.readLine()) != null) {
+				palabrasList.add(palabra);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public void leerPuntajeFichero() {
+	    try (BufferedReader reader = new BufferedReader(new FileReader("puntuaciones.csv"))) {
+	        String linea;
+	        while ((linea = reader.readLine()) != null) {
+	            String[] datos = linea.split(",");
+	            String resultado = datos[0];
+	            
+	            double puntos = datos.length > 1 ? Double.parseDouble(datos[1]) : 0.0; // Si no hay segundo valor, asigna 0
+
+	            boolean partidaGanada = Boolean.parseBoolean(resultado); // Convertimos el resultado a booleano
+	            this.puntos.set(puntos); 
+	            añadirPuntuacion(this.puntos, partidaGanada); // Usamos partidaGanada para determinar el estado
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	}
+
+
 
 	@FXML
 	private void onAñadirAction() {
@@ -195,35 +255,39 @@ public class RootController implements Initializable {
 	@FXML
 	void onLetraAction(ActionEvent event) {
 		// Obtiene la letra introducida por el usuario en el TextField
-	    String letraUsuario = entradaTextField.getText().toLowerCase(); // Convertir a minúscula (opcional)
-	    String adivinarLetra = adivinar.toLowerCase();
-	    
-	    if (letraUsuario.length() == 1) { // Asegúrate de que el usuario solo ingresa una letra
-	        // Comprobamos si la letra está en la palabra "adivinar"
-	        if (adivinarLetra.contains(letraUsuario)) {
-	            StringBuilder palabraMostrada = new StringBuilder(palabraLabel.getText());
-	            
-	            // Recorremos la palabra adivinar para actualizar las posiciones de la letra en palabraMostrada
-	            for (int i = 0; i < adivinarLetra.length(); i++) {
-	                if (String.valueOf(adivinarLetra.charAt(i)).equals(letraUsuario)) {
-	                    palabraMostrada.setCharAt(i, letraUsuario.charAt(0)); // Reemplaza "_" con la letra
-	                }
-	            }
-	            // Actualizamos el label con la palabra parcialmente adivinada
-	            palabraLabel.setText(palabraMostrada.toString());
-	        } else {
-	            // Reduce puntos si la letra no está en la palabra
-	            puntos.set(puntos.get() - 12.5);
-	        }
-	    } else {
-	        System.out.println("Por favor, introduce solo una letra.");
-	    }
-	    
-	    if(puntos.get() <= 0) {
+		String letraUsuario = entradaTextField.getText().toLowerCase(); // Convertir a minúscula (opcional)
+		String adivinarLetra = adivinar.toLowerCase();
+
+		if (letraUsuario.length() == 1) { // Asegúrate de que el usuario solo ingresa una letra
+			// Comprobamos si la letra está en la palabra "adivinar"
+			if (adivinarLetra.contains(letraUsuario)) {
+				StringBuilder palabraMostrada = new StringBuilder(palabraLabel.getText());
+
+				// Recorremos la palabra adivinar para actualizar las posiciones de la letra en
+				// palabraMostrada
+				for (int i = 0; i < adivinarLetra.length(); i++) {
+					if (String.valueOf(adivinarLetra.charAt(i)).equals(letraUsuario)) {
+						palabraMostrada.setCharAt(i, letraUsuario.charAt(0)); // Reemplaza "_" con la letra
+					}
+				}
+				// Actualizamos el label con la palabra parcialmente adivinada
+				palabraLabel.setText(palabraMostrada.toString());
+			} else {
+				// Reduce puntos si la letra no está en la palabra
+				puntos.set(puntos.get() - 12.5);
+			}
+		} else {
+			System.out.println("Por favor, introduce solo una letra.");
+		}
+
+		if (puntos.get() <= 0) {
 			palabraLabel.setText("Has perdido: " + adivinar);
 			añadirPuntuacion(puntos, false);
+			escribirPuntajeFichero(false, puntos.get());
 			adivinar = null;
 			resolverButton.setText("Jugar");
+			
+			
 		}
 	}
 
@@ -235,28 +299,30 @@ public class RootController implements Initializable {
 
 	@FXML
 	void onResolverAction(ActionEvent event) {
-		if(adivinar == null) {
+		if (adivinar == null) {
 			adivinar = elegirYMostrarPalabraOculta();
 		} else {
-			if(entradaTextField.getText().equals(adivinar)) {
+			if (entradaTextField.getText().equals(adivinar)) {
 				palabraLabel.setText(adivinar + ", has acertado.");
 				añadirPuntuacion(puntos, true);
+				escribirPuntajeFichero(true, puntos.get());
 				adivinar = null;
 				resolverButton.setText("Jugar");
 			} else {
 				puntos.set(puntos.get() - 25); // ¿Ineficiente?
-				
+
 			}
-			
+
 		}
-		
-		if(puntos.get() <= 0) {
+
+		if (puntos.get() <= 0) {
 			palabraLabel.setText("Has perdido: " + adivinar);
 			añadirPuntuacion(puntos, false);
+			escribirPuntajeFichero(false, puntos.get());
 			adivinar = null;
 			resolverButton.setText("Jugar");
 		}
-			
+
 	}
 
 	public ImageView getAhorcadoImageView() {
