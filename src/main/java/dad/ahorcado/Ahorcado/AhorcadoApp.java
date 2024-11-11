@@ -16,6 +16,8 @@ public class AhorcadoApp extends Application {
 		ahorcadoStage.setScene(new Scene(rootController.getRoot()));
 		rootController.leerPalabraFichero();
 		rootController.leerPuntajeFichero();
+		rootController.puntos.set(100);
+		rootController.adivinar = rootController.elegirYMostrarPalabraOculta();
 		ahorcadoStage.show();
 		
 	}

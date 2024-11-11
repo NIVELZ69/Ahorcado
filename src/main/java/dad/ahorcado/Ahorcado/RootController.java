@@ -70,7 +70,7 @@ public class RootController implements Initializable {
 	private TabPane root;
 
 	String adivinar;
-	private DoubleProperty puntos = new SimpleDoubleProperty(0);
+	public DoubleProperty puntos = new SimpleDoubleProperty(0);
 
 	public RootController() {
 		try {
@@ -90,11 +90,9 @@ public class RootController implements Initializable {
 		puntos.addListener((Observable, oldValue, newValue) -> actualizarImagen(newValue.intValue()));
 		listaPuntuaciones.setItems(puntuacionesList);
 
-		puntos.set(100);
-		adivinar = elegirYMostrarPalabraOculta();
 	}
 
-	private String elegirYMostrarPalabraOculta() {
+	public String elegirYMostrarPalabraOculta() {
 		if (palabrasList.size() > 0) {
 			int randomIndex = new Random().nextInt(palabrasList.size());
 			String palabra = palabrasList.get(randomIndex);
@@ -168,14 +166,14 @@ public class RootController implements Initializable {
 	    }
 	}
 
-	private void escribirPuntajeFichero(boolean ganado, double puntos) {
+	private void escribirPuntajeFichero(boolean ganado, double puntos, String palabra) {
 
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter("puntuaciones.csv", true))) {
 			if (ganado == true) {
-				writer.write(ganado + "," + puntos);
+				writer.write(ganado + "," + puntos + "," + palabra);
 				writer.newLine();
 			} else {
-				writer.write(ganado + ",");
+				writer.write(ganado + "," + palabra);
 				writer.newLine();
 			}
 		} catch (IOException e) {
@@ -203,17 +201,26 @@ public class RootController implements Initializable {
 	        while ((linea = reader.readLine()) != null) {
 	            String[] datos = linea.split(",");
 	            String resultado = datos[0];
-	            
-	            double puntos = datos.length > 1 ? Double.parseDouble(datos[1]) : 0.0; // Si no hay segundo valor, asigna 0
+	            boolean partidaGanada = Boolean.parseBoolean(resultado);
 
-	            boolean partidaGanada = Boolean.parseBoolean(resultado); // Convertimos el resultado a booleano
-	            this.puntos.set(puntos); 
-	            añadirPuntuacion(this.puntos, partidaGanada); // Usamos partidaGanada para determinar el estado
+	            // Asignar los valores según el tipo de partida (victoria o derrota)
+	            if (partidaGanada) {
+	                double puntos = (datos.length > 1) ? Double.parseDouble(datos[1]) : 0.0;
+	                adivinar = (datos.length > 2) ? datos[2] : "";
+	                this.puntos.set(puntos);  // Solo en victorias, se asigna puntaje
+	            } else {
+	                adivinar = (datos.length > 1) ? datos[1] : ""; // En derrotas, segundo valor es "adivinar"
+	                this.puntos.set(0); // Puntos a 0 para derrotas
+	            }
+	            
+	            // Añadir puntaje y estado de la partida al historial
+	            añadirPuntuacion(this.puntos, partidaGanada);
 	        }
 	    } catch (IOException e) {
 	        e.printStackTrace();
 	    }
 	}
+
 
 
 
@@ -283,7 +290,7 @@ public class RootController implements Initializable {
 		if (puntos.get() <= 0) {
 			palabraLabel.setText("Has perdido: " + adivinar);
 			añadirPuntuacion(puntos, false);
-			escribirPuntajeFichero(false, puntos.get());
+			escribirPuntajeFichero(false, puntos.get(), adivinar);
 			adivinar = null;
 			resolverButton.setText("Jugar");
 			
@@ -302,10 +309,10 @@ public class RootController implements Initializable {
 		if (adivinar == null) {
 			adivinar = elegirYMostrarPalabraOculta();
 		} else {
-			if (entradaTextField.getText().equals(adivinar)) {
+			if (entradaTextField.getText().toLowerCase().equals(adivinar.toLowerCase())) {
 				palabraLabel.setText(adivinar + ", has acertado.");
 				añadirPuntuacion(puntos, true);
-				escribirPuntajeFichero(true, puntos.get());
+				escribirPuntajeFichero(true, puntos.get(), adivinar);
 				adivinar = null;
 				resolverButton.setText("Jugar");
 			} else {
@@ -318,7 +325,7 @@ public class RootController implements Initializable {
 		if (puntos.get() <= 0) {
 			palabraLabel.setText("Has perdido: " + adivinar);
 			añadirPuntuacion(puntos, false);
-			escribirPuntajeFichero(false, puntos.get());
+			escribirPuntajeFichero(false, puntos.get(), adivinar);
 			adivinar = null;
 			resolverButton.setText("Jugar");
 		}
